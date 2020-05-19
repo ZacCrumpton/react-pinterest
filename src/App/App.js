@@ -1,18 +1,56 @@
 import React from 'react';
-import './App.scss';
-import BoardContainer from '../components/BoardContainer/BoardContainer';
-import MyNavbar from '../components/MyNavbar/MyNavbar';
-import Auth from '../components/Auth/Auth';
+import firebase from 'firebase/app';
+import 'firebase/auth';
 
-function App() {
-  return (
-    <div className="App">
-      <h2>PIN THE TREST</h2>
-      <MyNavbar/>
-      <Auth/>
-      <BoardContainer/>
-    </div>
-  );
+import fbConnection from '../helpers/data/connection';
+
+import Auth from '../components/Auth/Auth';
+import MyNavbar from '../components/MyNavbar/MyNavbar';
+import BoardContainer from '../components/BoardContainer/BoardContainer';
+
+import './App.scss';
+
+fbConnection();
+
+class App extends React.Component {
+  state = {
+    authed: false,
+  }
+
+  componentDidMount() {
+    this.removeListener = firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        this.setState({ authed: true });
+      } else {
+        this.setState({ authed: false });
+      }
+    });
+  }
+
+  componentWillUnmount() {
+    this.removeListener();
+  }
+
+  render() {
+    const { authed } = this.state;
+
+    const loadComponent = () => {
+      let componentToLoad = '';
+      if (authed) {
+        componentToLoad = <BoardContainer />;
+      } else {
+        componentToLoad = <Auth />;
+      }
+      return componentToLoad;
+    };
+    return (
+      <div className="App">
+        <h2>PIN THE TREST</h2>
+        <MyNavbar authed={authed}/>
+        {loadComponent()}
+      </div>
+    );
+  }
 }
 
 export default App;
